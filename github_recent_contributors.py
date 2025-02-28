@@ -8,7 +8,7 @@ Directions:
 1. Save this script as `github_recent_contributors.py` in a directory of your choice.
 2. Open a terminal and navigate to the directory where this script is saved.
 3. Install the required Python library: `pip3 install requests`
-4. Run the script with: `python3 github_recent_contributors.py`
+4. Run the script with: `python3 github_recent_contributors.py $org_name 30 users.json repo1,repo2,repo3,repo4`
 
 Requirements:
 - Python 3.x
