@@ -37,15 +37,28 @@ import json
 
 def get_repos(org_name, headers):
     """Fetch all repositories for the given organization."""
-    response = requests.get(
-        f'https://api.github.com/orgs/{org_name}/repos',
-        headers=headers
-    )
-    
-    if response.status_code != 200:
-        raise ValueError(f"Error fetching repositories for organization {org_name}. Status code: {response.status_code}")
+    repos = []
+    page = 1  # Start from page 1
 
-    return response.json()
+    while True:
+        response = requests.get(
+            f'https://api.github.com/orgs/{org_name}/repos',
+            headers=headers,
+            params={'per_page': 100, 'page': page}  # Fetch 100 repos per page
+        )
+
+        if response.status_code != 200:
+            raise ValueError(f"Error fetching repositories for organization {org_name}. Status code: {response.status_code}")
+
+        data = response.json()
+        
+        if not data:  # If no more repositories, break the loop
+            break
+        repos.extend(data)  # Add fetched repos to the list
+        page += 1  # Move to the next page
+
+    return repos
+
 
 def get_organization_members(org_name, headers):
     """Fetch all members of the organization."""
@@ -72,6 +85,7 @@ def get_contributors(org_name, number_of_days, headers):
     
     # Fetch all repositories in the organization
     repos = get_repos(org_name, headers)
+    print(f"Number of repos = {len(repos)}")
 
     # Date range calculation
     since_date = (datetime.utcnow() - timedelta(days=number_of_days)).isoformat() + "Z"
@@ -81,6 +95,11 @@ def get_contributors(org_name, number_of_days, headers):
     for repo in repos:
         owner = repo['owner']['login']
         repo_name = repo['name']
+        if repo_name in repo_list:
+            print(f"Found: {repo_name}")
+        else:
+            #print(f"skipping: {repo_name}")
+            continue
         
         # Fetch commits for each repository in the given date range
         response = requests.get(
@@ -134,7 +153,9 @@ if __name__ == '__main__':
     parser.add_argument("org_name", help="The name of the GitHub organization.")
     parser.add_argument("number_of_days", type=int, help="Number of days to look over.")
     parser.add_argument("output_filename", help="A file to log output.")
-    
-    args = parser.parse_args()
-    report_contributors(args.org_name, args.number_of_days, args.output_filename)
+    parser.add_argument("repos", help="Comma-separated list of repo names.")
 
+    args = parser.parse_args()
+    repo_list = args.repos.split(',')
+    print(f"repo_list: {repo_list}")
+    report_contributors(args.org_name, args.number_of_days, args.output_filename)
