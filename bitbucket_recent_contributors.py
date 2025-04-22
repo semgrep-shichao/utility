@@ -1,14 +1,15 @@
 import requests
 from datetime import datetime, timedelta
-from requests.auth import HTTPBasicAuth
 
 # === CONFIG ===
-USERNAME = 'your_bitbucket_username'
-APP_PASSWORD = 'your_app_password'
-WORKSPACE = 'your_workspace_id'
-
+TOKEN = 'ATCTT3xFfGN0_xvupNK3VD-Glb4gaWCAUmMQt5y2dH2Xk4IJaot6Btz71aJy4N8Atp0v8lRxxvyUoayaJaE0GHXsLvepO-'
+WORKSPACE = 'semgrep-ci'
 BASE_URL = 'https://api.bitbucket.org/2.0'
 DAYS = 30
+
+HEADERS = {
+    "Authorization": f"Bearer {TOKEN}"
+}
 
 # === LOGIC ===
 
@@ -16,7 +17,7 @@ def get_repos(workspace):
     repos = []
     url = f"{BASE_URL}/repositories/{workspace}"
     while url:
-        res = requests.get(url, auth=HTTPBasicAuth(USERNAME, APP_PASSWORD))
+        res = requests.get(url, headers=HEADERS)
         res.raise_for_status()
         data = res.json()
         repos.extend([repo['slug'] for repo in data['values']])
@@ -27,7 +28,7 @@ def get_committers(workspace, repo_slug, since_date):
     committers = set()
     url = f"{BASE_URL}/repositories/{workspace}/{repo_slug}/commits"
     while url:
-        res = requests.get(url, auth=HTTPBasicAuth(USERNAME, APP_PASSWORD))
+        res = requests.get(url, headers=HEADERS)
         res.raise_for_status()
         data = res.json()
         for commit in data['values']:
